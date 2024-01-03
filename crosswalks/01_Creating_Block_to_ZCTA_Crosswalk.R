@@ -1,3 +1,18 @@
+# This script is formatted to be run on a computing cluster via a bash script.
+# For more information on bash scripting, see the documentation in the sub-directory
+# called "bash_scripting"
+#
+# The variables below are created within the bash script and are used in this R
+# script to subset the data to a smaller area of interest. This enables the cluster
+# to run multiple, simultaneous processes of the same script on different locations,
+# thus drastically reducing total wall-clock time.
+#
+# If you wish to use this script locally, i.e., without bash scripting, you can 
+# lightly amend the code to directly assign the variables below. For example,
+# if you want to run the code locally just for D.C., create a clone of the script
+# and set b <- 11 (D.C. is the 11th state or territory when ordered sequentially by FIPS).
+
+
 # This script creates a crosswalk relationship file between census blocks (the 
 # smallest administrative unit available in the US Census) and ZIP Code Tabulation
 # Areas (ZCTAs). Any given census block is intended to be fully contained in only
@@ -41,18 +56,21 @@ sumfun <- function(x) { ifelse(all(is.na(x)), return(NA), return(sum(x, na.rm = 
 
 # %%%%%%%%%%%%%%%%%%%%%%% USER-DEFINED PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%% #
 
-census_api_key("")    # Obtain an API key here: https://www.census.gov/data/developers.html
-                      # NOTE: You should NOT save your API key within your code
+census_api_key("")     # Obtain an API key here: https://www.census.gov/data/developers.html
+                       # NOTE: You should NOT save your API key within your code
 
 output_data_dir <- "Out_Dir/State_Level_Files/" # Enter the full pathway of the directory where your output data will be stored.
 
-stateFIPS <- "11"     # D.C. - for the purpose of this tutorial, we will only assess DC, a small area
+# !!!!! TEMPORARY !!!!!: add here the list of all state FIPS for 50 states + DC
+states <- c()
 
-year <- 2020          # For the purpose of this tutorial, we are calculating only 2020 data,
-                      # but this can be run for other years. Note that syntax and/or
-                      # variable names can change between years and Decennial Censuses.
-                      # For this particular application, it is recommended to use
-                      # Decennial Census years (2010, 2020, etc.).
+stateFIPS <- states[b] # "b" comes from the bash script / compiler. Set b <- 11 for D.C. if testing code locally.
+
+year <- 2020           # For the purpose of this tutorial, we are calculating only 2020 data,
+                       # but this can be run for other years. Note that syntax and/or
+                       # variable names can change between years and Decennial Censuses.
+                       # For this particular application, it is recommended to use
+                       # Decennial Census years (2010, 2020, etc.).
 #
 # %%%%%%%%%%%%%% STEP 1. DOWNLOAD CENSUS BLOCK AND ZCTA SHAPEFILES %%%%%%%%%%% #
 #
