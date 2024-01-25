@@ -10,9 +10,8 @@
 # If you wish to use this script locally, i.e., without bash scripting, you can 
 # lightly amend the code to directly assign the variables below. For example,
 # if you want to run the code locally just for D.C., create a clone of the script
-# and set b <- 11 (D.C. is the 11th state or territory when ordered sequentially by FIPS).
-
-
+# and set b <- 9 (D.C. is the 9th state or territory when ordered sequentially by FIPS).
+#
 # This script creates a crosswalk relationship file between census blocks (the 
 # smallest administrative unit available in the US Census) and ZIP Code Tabulation
 # Areas (ZCTAs). Any given census block is intended to be fully contained in only
@@ -42,6 +41,9 @@ sf_use_s2(FALSE)  # S2 is for computing distances, areas, etc. on a SPHERE (usin
                   # and any error in that step would not materially impact the final output
 options(tigris_use_cache = TRUE)
 
+args <- commandArgs(trailingOnly = TRUE)  # These are arguments passed by the bash script
+stateindex <- as.numeric(args[1])         # This is the index of the state/territory being processed (1-51 for 50 states + DC)
+
 # Check package version numbers
 #
 if (packageVersion("terra") < "1.5.34"   | packageVersion("sf") < "1.0.7" | 
@@ -61,10 +63,12 @@ census_api_key("")     # Obtain an API key here: https://www.census.gov/data/dev
 
 output_data_dir <- "Out_Dir/State_Level_Files/" # Enter the full pathway of the directory where your output data will be stored.
 
-# !!!!! TEMPORARY !!!!!: add here the list of all state FIPS for 50 states + DC
-states <- c()
-
-stateFIPS <- states[b] # "b" comes from the bash script / compiler. Set b <- 11 for D.C. if testing code locally.
+# Get the state FIPS code based on the index from the bash script
+#
+states <- c("01", "02", "04", "05", "06", "08", "09", "10", "11", "12", "13", "15", "16", "17", "18", "19", "20", "21", "22", "23",
+            "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "44",
+            "45", "46", "47", "48", "49", "50", "51", "53", "54", "55", "56")
+stateFIPS <- states[stateindex] # "stateindex" comes from the bash script / compiler. Set b <- 11 for D.C. if testing code locally.
 
 year <- 2020           # For the purpose of this tutorial, we are calculating only 2020 data,
                        # but this can be run for other years. Note that syntax and/or
@@ -158,22 +162,17 @@ decennial_year <- ifelse(year %in% 2000:2009, 2000,
                          ifelse(year %in% 2010:2019, 2010,
                                 ifelse(year %in% 2020:2029, 2020, NA)))
 
-for (i in 1:length(counties)) {
-  
-  blockpop_bycounty <- get_decennial(geography = "block",
-                                     variables = "P1_001N", # Use load_variables("pl", year = 2020) to see available vars
-                                     year = decennial_year,
-                                     state = stateFIPS,
-                                     county = counties[i],
-                                     sumfile = "pl")
-  if (i == 1) { blockpop <- blockpop_bycounty; next }
-  blockpop <- rbind(blockpop, blockpop_bycounty)
-}
+blockpop <- get_decennial(geography = "block",
+                          variables = "P1_001N", # Use load_variables("pl", year = 2020) to see available vars
+                          year = decennial_year,
+                          state = stateFIPS,
+                          county = counties,
+                          sumfile = "pl")
 
 # Automated QC check -- confirm data is total population
 #
 if (length(which(blockpop$variable != "P1_001N")) > 0) {
-  cat("ERROR: Not all pop. vars. \n") } else { cat(":) all pop. vars. \n") }
+  cat("ERROR: Not all variables are P1_001N \n") } else { cat(":) all variables are P1_001N \n") }
 
 pop_var_name <- paste0("Pop_", year)
 names(blockpop)[grep("^value$", names(blockpop), ignore.case = TRUE)] <- pop_var_name
@@ -206,7 +205,7 @@ block_zctas$geometry <- NULL
 
 popvar <- names(block_zctas)[grep("^Pop", names(block_zctas), ignore.case = TRUE)]
 eqn <- as.formula(paste0(popvar, " ~ ", zcta_geoid))
-zcta_pop <- summaryBy(eqn, data = block_zctas, FUN = sumfun)
+zcta_pop <- doBy::summaryBy(eqn, data = block_zctas, FUN = sumfun)
 names(zcta_pop)[grep("^Pop", names(zcta_pop), ignore.case = TRUE)] <- "Pop_ZCTA"
 
 block_zctas <- merge(block_zctas, zcta_pop, by = zcta_geoid, all.x = TRUE)
