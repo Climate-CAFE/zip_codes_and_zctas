@@ -1,16 +1,16 @@
 # This script is formatted to be run on a computing cluster via a bash script.
-# For more information on bash scripting, see the documentation in the sub-directory
-# called "bash_scripting"
+# For background information on bash scripting, see the documentation in the sub-directory
+# called "bash_scripting" in the CAFE GitHub repository.
 #
-# The variables below are created within the bash script and are used in this R
-# script to subset the data to a smaller area of interest. This enables the cluster
-# to run multiple, simultaneous processes of the same script on different locations,
-# thus drastically reducing total wall-clock time.
+# The variables below are created within the bash script itself (see 02b* script) 
+# and are read into this R script to subset the data to a smaller area of interest. 
+# This enables the cluster to run multiple, simultaneous processes of the same 
+# script on different locations, thus drastically reducing total wall-clock time.
 #
 # If you wish to use this script locally, i.e., without bash scripting, you can 
 # lightly amend the code to directly assign the variables below. For example,
 # if you want to run the code locally just for D.C., create a clone of the script
-# and set b <- 9 (D.C. is the 9th state or territory when ordered sequentially by FIPS).
+# and set stateindex <- 9 (D.C. is the 9th state or territory when ordered sequentially by FIPS).
 #
 # This script creates a crosswalk relationship file between census blocks (the 
 # smallest administrative unit available in the US Census) and ZIP Code Tabulation
@@ -22,13 +22,12 @@
 # derived in the tutorial "/population_weighting_raster_data/Population_Weighting_Raster_to_Census_Units.R")
 # up to ZCTA resolution.
 #
-library("sf")     # For vector data
-library("plyr")
-library("tigris") # For downloading census shapefiles
-library("doBy")
-library("tidyverse")
-library("tidycensus")
-library("lwgeom")
+library("sf")         # Used for reading/write vector files and performing spatial analysis
+library("tigris")     # Used to download census shapefiles; no API needed
+library("doBy")       # Used to perform calculations on data by groups
+library("tidycensus") # Used to download census data; API required (see below)
+
+options(tigris_use_cache = TRUE)
 sf_use_s2(FALSE)  # S2 is for computing distances, areas, etc. on a SPHERE (using
                   # geographic coordinates, i.e., lat/lon in decimal-degrees); no need for this
                   # extra computational processing time if using PROJECTED coordinates,
@@ -37,17 +36,16 @@ sf_use_s2(FALSE)  # S2 is for computing distances, areas, etc. on a SPHERE (usin
                   # intersections between blocks and ZCTAs in the same CRS. Since
                   # blocks are designed to nest within ZCTAs, any error introduced
                   # by this process on such small areas would be negligible.
-options(tigris_use_cache = TRUE)
 
 # Check package version numbers
 #
-if (packageVersion("terra") < "1.5.34"   | packageVersion("sf") < "1.0.7" | 
-    packageVersion("plyr")  < "1.8.7"    | packageVersion("tigris") < "2.0.4" |
-    packageVersion("doBy")  < "4.6.19"   | packageVersion("tidyverse") < "1.3.1" |
-    packageVersion("tidycensus") < "1.5" | packageVersion("lwgeom") < "0.2.8") {
+if (packageVersion("terra") < "1.5.34"    | packageVersion("sf") < "1.0.7"       | 
+    packageVersion("tigris") < "2.0.4"    | packageVersion("doBy") < "4.6.19"    |
+    packageVersion("tidyverse") < "1.3.1" ) {
   cat("WARNING: at least one package is outdated and may result in errors. \n") }
 
 # Function for summing values that returns NA if all values are NA and NA values are removed
+# PSA: sum(c(NA,NA,NA), na.rm = TRUE) yields "0" rather than NA. sumfun(c(NA,NA,NA)), below, returns NA.
 #
 sumfun <- function(x) { ifelse(all(is.na(x)), return(NA), return(sum(x, na.rm = TRUE))) }
 
@@ -59,11 +57,15 @@ output_data_dir <- "Out_Dir/State_Level_Files/" # Enter the full pathway of the 
 args <- commandArgs(trailingOnly = TRUE)  # These are arguments passed by the bash script
 stateindex <- as.numeric(args[1])         # This is the index of the state/territory being processed (1-51 for 50 states + DC)
 
+# Automated QC -- check to make sure the argument was passed successfully from the bash script
+#
+if (is.na(stateindex)) { cat("ERROR: your state FIPS index was NOT successfully passed by the bash script \n") }
+
 year <- 2020  # For the purpose of this tutorial, we are calculating only 2020 data,
-# but this can be run for other years. Note that syntax and/or
-# variable names can change between years and Decennial Censuses.
-# For this particular application, it is recommended to use
-# Decennial Census years (2010, 2020, etc.).
+              # but this can be run for other years. Note that syntax and/or
+              # variable names can change between years and Decennial Censuses.
+              # For this particular application, it is recommended to use
+              # Decennial Census years (2010, 2020, etc.).
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% #
 
 # Get the state FIPS code based on the index from the bash script
@@ -78,7 +80,7 @@ stateFIPS <- states[stateindex] # "stateindex" comes from the bash script / comp
 #
 # Read in the block-level shapefile
 #
-blocks <- st_read(paste0(input_data_dir, "tl_", year, "_", stateFIPS, "_tabblock20.shp"))
+blocks <- st_read(paste0(input_data_dir, "Blocks_", year, "_", stateFIPS, ".gpkg"))
 
 # The ZCTA shapefile is a large national file -- we do not need to waste memory
 # by reading in the entire thing; we can read in just the features that are relevant

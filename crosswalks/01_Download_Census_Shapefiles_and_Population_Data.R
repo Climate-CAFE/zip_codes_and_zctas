@@ -1,14 +1,20 @@
 # With distributed computing, several iterations of your script are running
 # simultaneously. If the code includes API calls -- for instance, downloading
 # a Census shapefile for your area of interest -- these simultaneous requests
-# can be blocked by the server, resulting in your code failing. Instead, we will
-# download all of the necessary shapefiles locally first and have the next step
-# read in the download files. 
-# NOTE: these files will consume a substantial amount of storage space on your machine.
+# can be blocked by the server, resulting in your code failing. For this tutorial,
+# we need census-block shapefiles for every state, as well as a ZCTA shapefile
+# for the entire country. Instead of downloading these files within the same code
+# as the processing steps, we will instead download all of the necessary files
+# locally first and have the next step read in those downloaded files. 
 #
-library("tigris")
-library("sf")
-library("tidycensus")
+# NOTE: These files will consume a substantial amount of storage space on your machine.
+#       If you want to run just a sample, set the states variable assignment below
+#       to include only "11" (state FIPS code for Washington, D.C.), rather than
+#       for all 50 states + DC.
+#
+library("tigris")     # Used to download census shapefiles; no API needed
+library("sf")         # Used for reading/write vector files and performing spatial analysis
+library("tidycensus") # Used to download census data; API required (see below)
 
 # %%%%%%%%%%%%%%%%%%%%%%% USER-DEFINED PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%% #
 #
@@ -21,10 +27,10 @@ library("tidycensus")
 # NOTE: The steps above will save your Census API token in a plain-text file on your machine.
 #       Anyone with access to the directory where this is saved will be able to see
 #       your API token. Alternatively, you can use the keyring() package to store credentials
-#       securely in R, but this presents challenges when submitting jobs via bash script
-#       for distributed computing, as it requires user input of the password to 
+#       securely in R, but this presents challenges if you ever choose to process code
+#       that downloads census data via bash script, as it requires user input of the password to 
 #       unlock the keyring. For more information on securely storing credentials
-#       in R, see: https://www.infoworld.com/article/3320999/r-tip-keep-your-passwords-and-tokens-secure-with-the-keyring-package.html
+#       in R using keyring(), see: https://www.infoworld.com/article/3320999/r-tip-keep-your-passwords-and-tokens-secure-with-the-keyring-package.html
 #
 # Set the input data directory
 #
@@ -32,9 +38,13 @@ input_data_dir <- "In_Dir/" # You may need to change this to wherever you want t
 
 # Define the year for which you want shapefiles. Major changes to ZCTAs and blocks
 # occur during the Decennial Census (2000, 2010, 2020, etc.), but some small corrections
-# and changes can occur between them as well. For example, if a county changes its name,
-# Census will assign it (and all sub-geographies) a new FIPS code even if the 
-# boundaries do not change.
+# and changes may occur between them as well. Note, however, that the Census Bureau
+# will not necessarily update FIPS codes for block shapefiles between Decennial
+# Censuses, even if there are changes to block groups, tracts, and/or counties.
+# For example, as of January 2024, changes to Connecticut county-equivalents
+# (which went into effect starting with 2022 census data products) are not reflected
+# in the GEOID codes for 2022 or 2023 block shapefiles, but they *are* changed in
+# the tract- and county-level shapefiles.
 #
 year <- 2020
 
@@ -75,7 +85,8 @@ for (i in 1:length(states)) {
 # Note also that block identifiers (i.e., GEOID or FIPS code) can change over time,
 # even between Decennial Censuses -- for example, a county may merge with an
 # adjacent county and the Census Bureau will have to adjust the GEOIDs for the
-# affected Census units within the relevant counties.
+# affected Census units within the relevant counties. However, these GEOID changes
+# may not necessarily be reflected in the shapefiles downloaded from the Census Bureau.
 #
 # You can download Census data in a variety of ways. Here, we are using the
 # tidycensus package, which uses the Census Bureau's API. You must first obtain 
@@ -83,7 +94,7 @@ for (i in 1:length(states)) {
 # large "Request a Key" image on the left side of the screen to request an API key.
 # Enter your API key at the top of the script under "USER-DEFINED PARAMETERS";
 # it is assigned via the census_api_key() function.
-# Block populations are only available for Decennial Censuses
+# Block populations are only available for Decennial Censuses.
 #
 decennial_year <- ifelse(year %in% 2000:2009, 2000,
                          ifelse(year %in% 2010:2019, 2010,
