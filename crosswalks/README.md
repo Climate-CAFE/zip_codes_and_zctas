@@ -2,11 +2,11 @@
 
 ### Background
 
-Census blocks are the smallest enumeration units defined by the US Census Bureau, and they are the only administrative unit that "nests" within **every** other administrative unit. That is, census blocks can neatly be aggregated up to any geography (e.g., census tracts, counties, states, congressional districts, etc.). 
+Census blocks are the smallest enumeration units defined by the US Census Bureau, and they are the only administrative unit that "nests" within **every** other administrative unit. That is, census blocks can neatly be aggregated up to any census geography (e.g., census tracts, counties, states, congressional districts, etc.). 
 
-ZIP Code Tabulation Areas (ZCTAs) are drawn by the US Census Bureau as areal _approximations_ of ZIP Codes. More information can be found [here](https://github.com/Climate-CAFE/zip_codes_and_zctas). Since ZCTAs can cross counties and even state boundaries, the only sub-unit geography within them is census blocks. Similarly, ZCTAs cannot be _directly_ aggregated up to counties or states without a relationship file to account for the ZCTAs that cross county or state boundaries.
+ZIP Code Tabulation Areas (ZCTAs) are drawn by the US Census Bureau as areal _approximations_ of ZIP Codes. More information can be found [here](https://github.com/Climate-CAFE/zip_codes_and_zctas). Since ZCTAs can cross counties and even state boundaries, the only sub-unit geography aligning within them is census blocks. Similarly, ZCTAs cannot be _directly_ aggregated up to counties or states without a relationship file to account for the ZCTAs that cross county or state boundaries.
 
-Although census blocks share GEOID codes with census block groups, census tracts, counties, and states — the first 12, 11, 5, and 2 characters of the block GEOID constitute the GEOID for each of these other geographies, respectively — they do not share common GEOIDs with ZCTAs. Therefore, to aggregate block-level data up to ZCTAs, users must employ a crosswalk/relationship file between them.
+Although census blocks share geographic identifier (GEOID) codes with census block groups, census tracts, counties, and states — the first 12, 11, 5, and 2 characters of the census block GEOID constitute the GEOID for each of these other geographies, respectively — they do *not* share common GEOIDs with ZCTAs. Therefore, to aggregate census-block-level data up to ZCTAs, users must employ a crosswalk/relationship file between them.
 
 
 ### Code Overview
@@ -17,11 +17,13 @@ The code in this directory creates a nationwide crosswalk file that shows the re
 
 The final output contains the following variables:
 
-1. **GEOID20** - the 2020 block unique GEOID from the US Census Bureau
-2. **ZCTA5CE20** - the 2020 ZCTA unique GEOID from the US Census Bureau
-3. **Pop_Block_2020** - the block population from the 2020 Decennial Census (variable P1_001N)
-4. **Pop_ZCTA_2020** - the ZCTA population from the 2020 Decennial Census (variable P1_001N)
-5. **Weight** - the weighting term used to population-weight from block to ZCTA. This value represents the proportion of the block's population relative to the total ZCTA population in which it is located
+| **— Variable —** | **— Description —** |
+|--------:|:-----------|
+| **GEOID20** | Unique GEOID for the 2020 *census block* from the US Census Bureau |
+| **ZCTA5CE20** | Unique GEOID for the 2020 *ZCTA* from the US Census Bureau |
+| **Pop_Block_2020** | Block population from the 2020 Decennial Census (variable P1_001N) |
+| **Pop_ZCTA_2020** | ZCTA population from the 2020 Decennial Census (variable P1_001N) |
+| **Weight** | Weighting term used to population-weight from block to ZCTA. This value represents the proportion of the block's population relative to the total ZCTA population in which it is located |
 
 ### How to Use this Crosswalk
 
