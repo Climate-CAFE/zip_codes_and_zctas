@@ -36,6 +36,9 @@ Health data is sometimes available only at the level of the patient's home addre
 	+ Cons: Some exposure-measurement error in assigning ZCTA-level information to ZIP Code-level health information, since they are not exactly the same
 UDS Mapper crosswalks were available at https://udsmapper.org/zip-code-to-zcta-crosswalk/ prior to 2024. As of 2024, the crosswalks are no longer directly retrievable from a url. Community members have archived the historical crosswalks elsewhere. For instance, the data can be found at https://github.com/chris-prener/uds-mapper.
 
+### Additional Resources
++ Workflow for the harmonization of year-specific zip2zcta croswalks into a time (year) agnostic zip2zcta crosswalk https://github.com/NSAPH-Data-Processing/zip2zcta_master_xwalk.git
+
 ### References
 
 + Census Bureau, United States. 2023. "ZIP Code Tabulation Areas (ZCTAs)." Last updated on 10 August. https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html
