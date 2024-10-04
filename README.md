@@ -34,10 +34,13 @@ Health data is sometimes available only at the level of the patient's home addre
 2. **Use a ZIP-Code-to-ZCTA crosswalk**, such as those provided by UDS Mapper (2023), to assign an accompanying ZCTA to each patient's home address ZCTA. Shapefiles of ZCTAs provided by the Census Bureau are then used to extract exposure data, and users can easily align with Census data provided at ZCTA geographies
 	+ Pros: Relatively stable geographies (shapefiles substantively change only once per decade); data are freely and publicly available; demographic and population data are easily accessible at this resolution
 	+ Cons: Some exposure-measurement error in assigning ZCTA-level information to ZIP Code-level health information, since they are not exactly the same
+UDS Mapper crosswalks were available at https://udsmapper.org/zip-code-to-zcta-crosswalk/ prior to 2024. As of 2024, the crosswalks are no longer directly retrievable from a url. Community members have archived the historical crosswalks elsewhere. For instance, the data can be found at https://github.com/chris-prener/uds-mapper.
+
+### Additional Resources
++ Workflow for the harmonization of year-specific zip2zcta croswalks into a time (year) agnostic zip2zcta crosswalk https://github.com/NSAPH-Data-Processing/zip2zcta_master_xwalk.git
 
 ### References
 
 + Census Bureau, United States. 2023. "ZIP Code Tabulation Areas (ZCTAs)." Last updated on 10 August. https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html
 + Congressional Research Service (CRS). 2022. "Postal Primer: ZIP Codes and Boundary Review Process." Published on 14 June. https://crsreports.congress.gov/product/pdf/IF/IF12132/2 
 + Esri. 2023. "USA ZIP Code Areas." Last updated on 20 December. https://www.arcgis.com/home/item.html?id=8d2012a2016e484dafaac0451f9aea24#!
-+ UDS Mapper. 2023. "ZIP Code to ZCTA Crosswalk." https://udsmapper.org/zip-code-to-zcta-crosswalk/
